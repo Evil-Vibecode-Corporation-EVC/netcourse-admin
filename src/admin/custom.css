@@ -1,0 +1,316 @@
+/* ============================================================
+   Netcourse Admin – Global Dark Theme CSS Overrides
+   Palette:
+     #020617  bg page
+     #0f172a  bg sidebar / input
+     #1e293b  bg card
+     #334155  border
+     #ffffff  text primary
+     #cbd5e1  text muted
+     #94a3b8  text faint
+     #64748b  text ghost
+     #10b981  green accent
+     #06b6d4  cyan accent
+     #3b82f6  blue accent
+   ============================================================ */
+
+/* ── 1. Base ──────────────────────────────────────────────── */
+html,
+body {
+  color-scheme: dark !important;
+  background-color: #020617 !important;
+  color: #ffffff !important;
+}
+
+/* ── 2. Headings ──────────────────────────────────────────── */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #ffffff !important;
+}
+
+/* ── 3. Labels ────────────────────────────────────────────── */
+label,
+legend {
+  color: #94a3b8 !important;
+}
+
+/* ── 4. Color inheritance — never force black ─────────────── */
+p,
+span,
+div,
+li,
+dt,
+dd {
+  color: inherit;
+}
+
+/* ── 5. Tables ────────────────────────────────────────────── */
+th {
+  color: #94a3b8 !important;
+  background-color: #0f172a !important;
+}
+td {
+  color: #cbd5e1 !important;
+}
+tr:hover td {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* ── 6. Form controls ─────────────────────────────────────── */
+input:not([type="submit"]):not([type="button"]):not([type="reset"]),
+textarea,
+select {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+option {
+  background: #1e293b !important;
+  color: #ffffff !important;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* ── Автозаполнение браузера (Webkit/Chrome) ──────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+}
+
+/* ── 7. Сайдбар и навигация ──────────────────────────────── */
+[class*="SideBar"],
+[class*="sidebar"],
+[class*="SideNav"],
+[class*="sidenav"],
+[class*="NavigationElement"],
+[class*="navigationElement"] {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+}
+
+/* Ссылки внутри сайдбара */
+[class*="SideBar"] a,
+[class*="sidebar"] a,
+[class*="SideNav"] a,
+[class*="NavigationElement"] a {
+  color: #cbd5e1 !important;
+  text-decoration: none !important;
+}
+[class*="SideBar"] a:hover,
+[class*="sidebar"] a:hover,
+[class*="NavigationElement"] a:hover {
+  color: #34d399 !important;
+}
+
+/* ── 8. Верхняя панель (TopBar / AppBar) — НЕ заголовки! ─── */
+/* Используем только семантический тег и точные AdminJS-классы */
+header,
+[class*="TopBar"],
+[class*="topBar"],
+[class*="AppBar"],
+[class*="appBar"] {
+  background-color: #0f172a !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+/* ── 9. React-Select (AdminJS prefix adminjs__) ──────────── */
+.adminjs__control {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+.adminjs__menu,
+.adminjs__menu-list {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+.adminjs__option {
+  color: #cbd5e1 !important;
+  background-color: transparent !important;
+}
+.adminjs__option:hover,
+.adminjs__option--is-focused {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  color: #ffffff !important;
+}
+.adminjs__option--is-selected {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #ffffff !important;
+}
+.adminjs__single-value {
+  color: #ffffff !important;
+}
+.adminjs__input {
+  color: #ffffff !important;
+}
+.adminjs__placeholder {
+  color: #64748b !important;
+}
+.adminjs__indicator {
+  color: #64748b !important;
+}
+.adminjs__indicator:hover {
+  color: #94a3b8 !important;
+}
+.adminjs__indicator-separator {
+  background-color: #334155 !important;
+}
+
+/* ── 10. Фильтр-панель ───────────────────────────────────── */
+[class*="Filter"],
+[class*="filter"] {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+}
+[class*="Filter"] label,
+[class*="filter"] label {
+  color: #94a3b8 !important;
+}
+
+/* ── 11. Пагинация ───────────────────────────────────────── */
+[class*="Pagination"] *,
+[class*="pagination"] * {
+  color: #cbd5e1 !important;
+}
+
+/* ── 12. Модальные окна и drawer ─────────────────────────── */
+[class*="Modal"],
+[class*="modal"],
+[class*="Drawer"],
+[class*="drawer"] {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+}
+[class*="Overlay"],
+[class*="overlay"] {
+  background-color: rgba(2, 6, 23, 0.85) !important;
+}
+
+/* ── 13. Остаточные белые фоны (inline style) ────────────── */
+/* AdminJS иногда задаёт bg="white" через inline-style */
+[style*="background: white"],
+[style*="background:#fff"],
+[style*="background: #fff"],
+[style*="background: #ffffff"],
+[style*="background-color: white"],
+[style*="background-color: #fff"],
+[style*="background-color: #ffffff"] {
+  background-color: #1e293b !important;
+  background: #1e293b !important;
+}
+
+/* ── 14. Текст в записях ─────────────────────────────────── */
+[class*="PropertyInShow"] *,
+[class*="propertyInShow"] *,
+[class*="ShowProperties"] *,
+[class*="RecordInList"] * {
+  color: #ffffff !important;
+}
+
+/* ── 15. Breadcrumbs ─────────────────────────────────────── */
+[class*="Breadcrumb"],
+[class*="breadcrumb"],
+[class*="Breadcrumb"] *,
+[class*="breadcrumb"] * {
+  color: #94a3b8 !important;
+}
+
+/* ── 16. Badges ──────────────────────────────────────────── */
+[class*="Badge"],
+[class*="badge"] {
+  color: #ffffff !important;
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* ── 17. Ссылки (общие) ──────────────────────────────────── */
+a {
+  color: #34d399;
+}
+a:hover {
+  color: #10b981;
+}
+
+/* ── 18. Table header/footer bar ─────────────────────────── */
+[class*="TableCaption"],
+[class*="tableCaption"],
+[class*="ListHead"],
+[class*="listHead"] {
+  background-color: #0f172a !important;
+  color: #94a3b8 !important;
+}
+
+/* ── 19. Дропдауны ───────────────────────────────────────── */
+[class*="DropDown"],
+[class*="Dropdown"],
+[class*="dropdown"] {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[class*="DropDown"] *,
+[class*="Dropdown"] * {
+  color: #cbd5e1 !important;
+}
+
+/* ── 20. Основной контент (только семантический тег) ─────── */
+main {
+  background-color: #020617 !important;
+  color: #ffffff !important;
+}
+
+/* ── 21. Скроллбары (WebKit) ─────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* ── 22. Фокус-кольцо ────────────────────────────────────── */
+:focus-visible {
+  outline-color: #10b981 !important;
+}
+
+/* ── 23. Уведомления / Toast ─────────────────────────────── */
+[class*="Notification"],
+[class*="notification"],
+[class*="Toast"],
+[class*="toast"] {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+/* ── 24. Пустое состояние (No records) — убрать белый круг── */
+/* AdminJS рендерит Illustration с bg="white" → перекрываем  */
+[class*="Illustration"],
+[class*="illustration"],
+[class*="EmptyState"],
+[class*="emptyState"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Белый круг вокруг SVG-иллюстрации */
+[class*="Illustration"] > *,
+[class*="illustration"] > * {
+  background: transparent !important;
+}

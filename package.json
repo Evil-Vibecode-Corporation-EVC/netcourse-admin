@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp src/admin/custom.css dist/admin/custom.css",
     "lint": "eslint \"src\"",
     "start": "dotenv -c '.env' -- node dist/app"
   },

@@ -152,10 +152,87 @@ const options: AdminJSOptions = {
     },
     component: DashboardComponent,
   },
+  assets: {
+    styles: ['/admin-custom.css'],
+  },
   branding: {
+    logo: false,
     companyName: 'Netcourse Admin',
-    // Note: `softwareBrothers` property removed because it is not part of
-    // the AdminJS BrandingOptions type and causes TS errors.
+    withMadeWithLove: false,
+    theme: {
+      colors: {
+        // ── Фоны ──────────────────────────────────────────────────────────────
+        bg: '#020617',
+        filterBg: '#0f172a',
+        container: '#1e293b',
+        sidebar: '#0f172a',
+
+        // ── Основной акцент (зелёный) ─────────────────────────────────────────
+        primary100: '#10b981',
+        primary80: '#34d399',
+        primary60: '#059669',
+        primary40: '#065f46',
+        primary20: '#022c22',
+
+        // ── Вторичный акцент (циан) ───────────────────────────────────────────
+        accent: '#06b6d4',
+
+        // ── Серая шкала (текст) ───────────────────────────────────────────────
+        grey100: '#ffffff',
+        grey80: '#cbd5e1',
+        grey60: '#94a3b8',
+        grey40: '#64748b',
+        grey20: '#1e293b',
+
+        // ── Базовые ───────────────────────────────────────────────────────────
+        white: '#ffffff',
+        black: '#020617',
+        text: '#ffffff',
+        border: '#1e293b',
+
+        // ── Элементы ──────────────────────────────────────────────────────────
+        inputBorder: '#334155',
+        separator: '#334155',
+        highlight: '#1e293b',
+
+        // ── Ошибки ────────────────────────────────────────────────────────────
+        error: '#ef4444',
+        errorDark: '#dc2626',
+        errorLight: '#450a0a',
+
+        // ── Успех ─────────────────────────────────────────────────────────────
+        success: '#10b981',
+        successDark: '#059669',
+        successLight: '#022c22',
+
+        // ── Инфо (синий) ──────────────────────────────────────────────────────
+        info: '#3b82f6',
+        infoDark: '#2563eb',
+        infoLight: '#1e3a8a',
+
+        // ── Предупреждение ────────────────────────────────────────────────────
+        warning: '#f59e0b',
+        warningDark: '#d97706',
+        warningLight: '#451a03',
+
+        // ── Логотип AdminJS ───────────────────────────────────────────────────
+        love: '#10b981',
+      },
+      shadows: {
+        login: '0 15px 24px 0 rgba(0,0,0,0.6)',
+        cardHover: '0 4px 12px 0 rgba(0,0,0,0.5)',
+        drawer: '-2px 0 8px 0 rgba(0,0,0,0.4)',
+        card: '0 0.25rem 0.5rem rgba(0,0,0,0.35)',
+        inputFocus: '0 2px 4px 0 rgba(16,185,129,0.4)',
+        buttonFocus: '0 4px 6px 0 rgba(16,185,129,0.35)',
+      },
+      borders: {
+        input: '1px solid #334155',
+        filterInput: '1px rgba(255,255,255,0.08)',
+        bg: '1px solid #020617',
+        default: '1px solid #1e293b',
+      },
+    },
   },
 };
 
