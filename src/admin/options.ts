@@ -1,4 +1,5 @@
 import { AdminJSOptions } from 'adminjs';
+import bcrypt from 'bcryptjs';
 
 import componentLoader from './component-loader.js';
 
@@ -36,14 +37,90 @@ if (process.env.AUTOLOAD_DB === 'true') {
 }
 
 // Register dashboard component with the component loader.
-// The argument is the id used by AdminJS to reference this component.
 const DashboardComponent = componentLoader.add('Dashboard', './components/dashboard');
+
+const hashPasswordHook = async (request: any) => {
+  const pwd = request?.payload?.password;
+  if (pwd && pwd.trim() !== '') {
+    request.payload.password = await bcrypt.hash(pwd, 10);
+  } else if (pwd !== undefined) {
+    delete request.payload.password;
+  }
+  return request;
+};
+
+const configuredResources: AdminJSOptions['resources'] = [];
+
+if (db) {
+  configuredResources.push({
+    resource: db.table('users'),
+    options: {
+      id: 'users',
+      navigation: { name: 'Пользователи', icon: 'User' },
+      listProperties: ['id', 'email', 'username', 'role', 'created_at'],
+      showProperties: ['id', 'email', 'username', 'avatar_url', 'bio', 'role', 'created_at'],
+      editProperties: ['email', 'username', 'password', 'avatar_url', 'bio', 'role'],
+      newProperties: ['email', 'username', 'password', 'avatar_url', 'bio', 'role'],
+      filterProperties: ['email', 'username', 'role', 'created_at'],
+      properties: {
+        password: {
+          isVisible: { list: false, show: false, edit: true, filter: false },
+          type: 'password',
+        },
+        bio: { type: 'textarea' },
+        created_at: { isVisible: { list: true, show: true, edit: false, filter: true } },
+        role: {
+          availableValues: [
+            { value: 'ADMIN', label: 'Администратор' },
+            { value: 'USER', label: 'Пользователь' },
+            { value: 'STUDENT', label: 'Студент' },
+          ],
+        },
+      },
+      actions: {
+        new: { before: [hashPasswordHook] },
+        edit: { before: [hashPasswordHook] },
+      },
+    },
+  });
+
+  // ── courses ────────────────────────────────────────────────────────────────
+  configuredResources.push({
+    resource: db.table('courses'),
+    options: {
+      id: 'courses',
+      navigation: { name: 'Курсы', icon: 'Video' },
+      listProperties: ['id', 'title', 'category', 'require_quiz_completion', 'min_quiz_score'],
+      showProperties: ['id', 'title', 'description', 'category', 'require_quiz_completion', 'min_quiz_score'],
+      editProperties: ['title', 'description', 'category', 'require_quiz_completion', 'min_quiz_score'],
+      newProperties: ['title', 'description', 'category', 'require_quiz_completion', 'min_quiz_score'],
+      filterProperties: ['title', 'category', 'require_quiz_completion'],
+      properties: {
+        description: { type: 'textarea' },
+      },
+    },
+  });
+
+  // ── enrollments ────────────────────────────────────────────────────────────
+  configuredResources.push({
+    resource: db.table('enrollments'),
+    options: {
+      id: 'enrollments',
+      navigation: { name: 'Курсы', icon: 'Video' },
+      listProperties: ['id', 'user_id', 'course_id', 'enrolled_at'],
+      showProperties: ['id', 'user_id', 'course_id', 'enrolled_at'],
+      editProperties: ['user_id', 'course_id'],
+      newProperties: ['user_id', 'course_id'],
+      filterProperties: ['user_id', 'course_id', 'enrolled_at'],
+    },
+  });
+}
 
 // Options for AdminJS instance
 const options: AdminJSOptions = {
   componentLoader,
   rootPath: process.env.ADMIN_ROOT_PATH || '/admin',
-  resources: [], // explicit resources can be added here if desired
+  resources: configuredResources,
   databases,
   dashboard: {
     // Handler returns data consumed by the dashboard component.
@@ -161,61 +238,50 @@ const options: AdminJSOptions = {
     withMadeWithLove: false,
     theme: {
       colors: {
-        // ── Фоны ──────────────────────────────────────────────────────────────
         bg: '#020617',
         filterBg: '#0f172a',
         container: '#1e293b',
         sidebar: '#0f172a',
 
-        // ── Основной акцент (зелёный) ─────────────────────────────────────────
         primary100: '#10b981',
         primary80: '#34d399',
         primary60: '#059669',
         primary40: '#065f46',
         primary20: '#022c22',
 
-        // ── Вторичный акцент (циан) ───────────────────────────────────────────
         accent: '#06b6d4',
 
-        // ── Серая шкала (текст) ───────────────────────────────────────────────
         grey100: '#ffffff',
         grey80: '#cbd5e1',
         grey60: '#94a3b8',
         grey40: '#64748b',
         grey20: '#1e293b',
 
-        // ── Базовые ───────────────────────────────────────────────────────────
         white: '#ffffff',
         black: '#020617',
         text: '#ffffff',
         border: '#1e293b',
 
-        // ── Элементы ──────────────────────────────────────────────────────────
         inputBorder: '#334155',
         separator: '#334155',
         highlight: '#1e293b',
 
-        // ── Ошибки ────────────────────────────────────────────────────────────
         error: '#ef4444',
         errorDark: '#dc2626',
         errorLight: '#450a0a',
 
-        // ── Успех ─────────────────────────────────────────────────────────────
         success: '#10b981',
         successDark: '#059669',
         successLight: '#022c22',
 
-        // ── Инфо (синий) ──────────────────────────────────────────────────────
         info: '#3b82f6',
         infoDark: '#2563eb',
         infoLight: '#1e3a8a',
 
-        // ── Предупреждение ────────────────────────────────────────────────────
         warning: '#f59e0b',
         warningDark: '#d97706',
         warningLight: '#451a03',
 
-        // ── Логотип AdminJS ───────────────────────────────────────────────────
         love: '#10b981',
       },
       shadows: {
