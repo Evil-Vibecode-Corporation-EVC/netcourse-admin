@@ -11,6 +11,7 @@ jobs:
     deploy:
         runs-on:
             - 'miha-host:host'
+            - self-hosted
 
         steps:
             - name: Checkout repository
