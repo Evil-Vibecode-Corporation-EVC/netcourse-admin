@@ -1,0 +1,36 @@
+name: Deploy Admin
+
+on:
+    push:
+        paths:
+            - 'netcourse-admin/**'
+        branches:
+            - main
+
+jobs:
+    deploy:
+        runs-on:
+            - self-hosted
+            - 'miha-host:host'
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Deploy admin to local host
+              run: |
+                  set -euo pipefail
+                  HOST_ROOT="/home/miha/srv"
+                  APP_DIR="$HOST_ROOT/netcourse-admin"
+
+                  echo "Syncing netcourse-admin to $APP_DIR"
+                  mkdir -p "$APP_DIR"
+
+                  rsync -az --delete --exclude='.git' --exclude='.github' netcourse-admin/ "$APP_DIR"/
+
+                  cd "$HOST_ROOT"
+
+                  echo "Building and restarting netcourse-admin service via docker compose"
+                  docker compose -f docker-compose.yml -p srv up -d --build netcourse-admin
+
+                  docker system prune -f || true
