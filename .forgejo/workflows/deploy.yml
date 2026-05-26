@@ -10,6 +10,7 @@ on:
 jobs:
     deploy:
         runs-on:
+            - self-hosted
             - 'miha-host:host'
 
         steps:
