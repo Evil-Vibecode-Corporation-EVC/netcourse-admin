@@ -119,7 +119,7 @@ if (db) {
 // Options for AdminJS instance
 const options: AdminJSOptions = {
   componentLoader,
-  rootPath: process.env.ADMIN_ROOT_PATH || '/admin',
+  rootPath: process.env.ADMIN_ROOT_PATH || '/',
   resources: configuredResources,
   databases,
   dashboard: {
