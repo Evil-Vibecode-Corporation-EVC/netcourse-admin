@@ -1,6 +1,4 @@
-Netcourse Admin — кратко
-
-Тёмная админ‑панель на AdminJS (Express + PostgreSQL).
+админ‑панель на AdminJS (Express + PostgreSQL).
 
 Установка и запуск
 - npm install
@@ -28,11 +26,8 @@ PORT=3001
 1) Сгенерировать bcrypt‑хэш: node -e "import('bcryptjs').then(b=>b.hash('PASS',10).then(h=>console.log(h)))"
 2) Вставить запись в users с role='ADMIN' и полученным хэшем.
 
-Коротко по файлам
+файлы
 - src/app.ts — запуск сервера
 - src/admin/options.ts — ресурсы, дашборд, тема
 - src/admin/auth-provider.ts — вход (только role='ADMIN')
 - src/db/* — адаптер @adminjs/sql (при ошибке БД панель стартует в degraded mode)
-
-Примечание
-Если нет DATABASE_URL и AUTOLOAD_DB!=true — панель стартует без ресурсов/дашборда.
