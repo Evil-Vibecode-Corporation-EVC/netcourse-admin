@@ -106,12 +106,72 @@ if (db) {
     resource: db.table('enrollments'),
     options: {
       id: 'enrollments',
+      // Place enrollments under Courses to keep course-related data together
       navigation: { name: 'Курсы', icon: 'Video' },
       listProperties: ['id', 'user_id', 'course_id', 'enrolled_at'],
       showProperties: ['id', 'user_id', 'course_id', 'enrolled_at'],
       editProperties: ['user_id', 'course_id'],
       newProperties: ['user_id', 'course_id'],
       filterProperties: ['user_id', 'course_id', 'enrolled_at'],
+    },
+  });
+
+  // ── forum resources ───────────────────────────────────────────────────────
+  // Register main forum tables under a dedicated "Форум" navigation group.
+  configuredResources.push({
+    resource: db.table('forum_posts'),
+    options: {
+      id: 'forum_posts',
+      navigation: { name: 'Форум', icon: 'Chat' },
+      listProperties: ['id', 'title', 'user_id', 'created_at'],
+      showProperties: ['id', 'title', 'body', 'user_id', 'created_at', 'updated_at'],
+      editProperties: ['title', 'body', 'user_id'],
+      filterProperties: ['title', 'user_id', 'created_at'],
+    },
+  });
+
+  configuredResources.push({
+    resource: db.table('forum_replies'),
+    options: {
+      id: 'forum_replies',
+      navigation: { name: 'Форум', icon: 'Chat' },
+      listProperties: ['id', 'post_id', 'user_id', 'created_at'],
+      showProperties: ['id', 'post_id', 'body', 'user_id', 'created_at', 'updated_at'],
+      editProperties: ['body'],
+      filterProperties: ['post_id', 'user_id', 'created_at'],
+    },
+  });
+
+  configuredResources.push({
+    resource: db.table('forum_tags'),
+    options: {
+      id: 'forum_tags',
+      navigation: { name: 'Форум', icon: 'Chat' },
+      listProperties: ['id', 'name', 'slug'],
+      showProperties: ['id', 'name', 'slug', 'description'],
+      editProperties: ['name', 'slug', 'description'],
+      filterProperties: ['name'],
+    },
+  });
+
+  // Likes/associations (read-only in admin by default)
+  configuredResources.push({
+    resource: db.table('forum_post_likes'),
+    options: {
+      id: 'forum_post_likes',
+      navigation: { name: 'Форум', icon: 'Chat' },
+      listProperties: ['id', 'post_id', 'user_id', 'created_at'],
+      showProperties: ['id', 'post_id', 'user_id', 'created_at'],
+    },
+  });
+
+  configuredResources.push({
+    resource: db.table('forum_reply_likes'),
+    options: {
+      id: 'forum_reply_likes',
+      navigation: { name: 'Форум', icon: 'Chat' },
+      listProperties: ['id', 'reply_id', 'user_id', 'created_at'],
+      showProperties: ['id', 'reply_id', 'user_id', 'created_at'],
     },
   });
 }
@@ -228,6 +288,12 @@ const options: AdminJSOptions = {
       return result;
     },
     component: DashboardComponent,
+  },
+  pages: {
+    Forum: {
+      label: 'Форум',
+      component: ForumComponent,
+    },
   },
   assets: {
     styles: ['/admin-custom.css'],
