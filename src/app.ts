@@ -30,7 +30,7 @@ const start = async () => {
     console.warn('[app] DB initialization error (panel will run in degraded mode):', (dbErr as Error).message ?? dbErr);
   }
 
-  const admin = new AdminJS(options);
+  const admin = new AdminJS({ ...options, rootPath: '/' });
 
   if (process.env.NODE_ENV === 'production') {
     await admin.initialize();
@@ -56,7 +56,7 @@ const start = async () => {
   app.use(admin.options.rootPath, router);
 
   app.listen(port, () => {
-    console.log(`AdminJS available at http://localhost:${port}${admin.options.rootPath}`);
+    console.log(`AdminJS available at http://localhost:${port}/`);
   });
 };
 

@@ -290,10 +290,7 @@ const options: AdminJSOptions = {
     component: DashboardComponent,
   },
   pages: {
-    Forum: {
-      label: 'Форум',
-      component: ForumComponent,
-    },
+    
   },
   assets: {
     styles: ['/admin-custom.css'],
