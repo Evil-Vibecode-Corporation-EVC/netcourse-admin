@@ -16,10 +16,10 @@ const C = {
   ghost: '#64748b',
 } as const;
 
-type Answer = { answer_text: string; is_correct: boolean };
-type Question = { question_text: string; question_type: string; answers: Answer[] };
-type Lesson = { title: string; content_type: string; video_url?: string; text_content?: string; quiz_title?: string; questions?: Question[] };
-type Section = { title: string; lessons: Lesson[] };
+type Answer = { id?: number; answer_text: string; is_correct: boolean };
+type Question = { id?: number; question_text: string; question_type: string; answers: Answer[] };
+type Lesson = { id?: number; title: string; content_type: string; video_url?: string; text_content?: string; quiz_title?: string; questions?: Question[] };
+type Section = { id?: number; title: string; lessons: Lesson[] };
 
 const CONTENT_TYPES = [
   { value: 'text', label: 'Текст' },
@@ -85,7 +85,6 @@ const btnAdd: React.CSSProperties = {
   marginTop: 4,
 };
 
-// ─── AnswerRow ──────────────────────────────────────────────────────────────────
 function AnswerRow({
   answer,
   onChange,
@@ -118,7 +117,6 @@ function AnswerRow({
   );
 }
 
-// ─── QuestionBlock ──────────────────────────────────────────────────────────────
 function QuestionBlock({
   question,
   onChange,
@@ -173,7 +171,6 @@ function QuestionBlock({
   );
 }
 
-// ─── LessonRow ──────────────────────────────────────────────────────────────────
 function LessonRow({
   lesson,
   onChange,
@@ -260,7 +257,6 @@ function LessonRow({
   );
 }
 
-// ─── SectionBlock ───────────────────────────────────────────────────────────────
 function SectionBlock({
   section,
   index,
@@ -305,17 +301,23 @@ function SectionBlock({
   );
 }
 
-// ─── Main component ──────────────────────────────────────────────────────────────
-export default function CourseCreate(props: any): JSX.Element {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('frontend');
-  const [requireQuiz, setRequireQuiz] = useState(true);
-  const [minScore, setMinScore] = useState(65);
-  const [sections, setSections] = useState<Section[]>([
-    { title: '', lessons: [{ title: '', content_type: 'video' }] },
-  ]);
+export default function CourseEdit(props: any): JSX.Element {
+  const record = props.record?.params || {};
+  const courseId = record.id;
+  const initialSections: Section[] = (() => {
+    try {
+      return record.course_data_json ? JSON.parse(record.course_data_json) : [];
+    } catch { return []; }
+  })();
+  const [title, setTitle] = useState(record.title || '');
+  const [description, setDescription] = useState(record.description || '');
+  const [category, setCategory] = useState(record.category || 'frontend');
+  const [requireQuiz, setRequireQuiz] = useState(record.require_quiz_completion === true || record.require_quiz_completion === 'true');
+  const [minScore, setMinScore] = useState(Number(record.min_quiz_score ?? 65));
+  const [sections, setSections] = useState<Section[]>(initialSections);
   const [submitting, setSubmitting] = useState(false);
+
+  const apiUrl = window.location.pathname.replace(/^\/resources\//, '/api/resources/');
 
   const addSection = () => {
     setSections([...sections, { title: '', lessons: [{ title: '', content_type: 'text' }] }]);
@@ -330,7 +332,6 @@ export default function CourseCreate(props: any): JSX.Element {
   };
 
   const totalLessons = sections.reduce((s, sec) => s + sec.lessons.length, 0);
-  const apiUrl = window.location.pathname.replace(/^\/resources\//, '/api/resources/');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -351,7 +352,7 @@ export default function CourseCreate(props: any): JSX.Element {
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
       } else {
-        alert(data.notice?.message || 'Ошибка при создании курса');
+        alert(data.notice?.message || 'Ошибка при сохранении курса');
       }
     } catch (err: any) {
       alert(`Ошибка: ${err.message}`);
@@ -363,12 +364,11 @@ export default function CourseCreate(props: any): JSX.Element {
   return (
     <div style={{ padding: 24, minHeight: '100vh', backgroundColor: C.bgPage, color: C.white, fontFamily: "'Roboto', sans-serif" }}>
       <form method="POST" onSubmit={handleSubmit} style={{ maxWidth: 800, margin: '0 auto' }}>
-        <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 700 }}>Создание курса</h1>
+        <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 700 }}>Редактирование курса</h1>
         <p style={{ margin: '0 0 24px', fontSize: 13, color: C.ghost }}>
-          Курс, разделы, уроки и тесты — всё за один шаг
+          ID: {courseId} — редактирование разделов, уроков и тестов
         </p>
 
-        {/* Course fields */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={labelStyle}>Название курса *</label>
@@ -428,7 +428,6 @@ export default function CourseCreate(props: any): JSX.Element {
           </div>
         </div>
 
-        {/* Sections */}
         <h2 style={{ fontSize: 16, fontWeight: 600, color: C.muted, margin: '0 0 12px' }}>
           Разделы и уроки
           <span style={{ fontSize: 12, color: C.ghost, fontWeight: 400, marginLeft: 8 }}>
@@ -457,7 +456,7 @@ export default function CourseCreate(props: any): JSX.Element {
           disabled={submitting}
           style={submitBtnStyle}
         >
-          {submitting ? 'Создание…' : 'Создать курс'}
+          {submitting ? 'Сохранение…' : 'Сохранить курс'}
         </button>
       </form>
     </div>
