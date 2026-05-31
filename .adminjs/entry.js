@@ -9,5 +9,7 @@ import QuizQuickCreate from '../dist/admin/components/quiz-create'
 AdminJS.UserComponents.QuizQuickCreate = QuizQuickCreate
 import UserQuickCreate from '../dist/admin/components/user-create'
 AdminJS.UserComponents.UserQuickCreate = UserQuickCreate
+import ForumDetailedEdit from '../dist/admin/components/forum-edit'
+AdminJS.UserComponents.ForumDetailedEdit = ForumDetailedEdit
 import Dashboard from '../dist/admin/components/dashboard'
 AdminJS.UserComponents.Dashboard = Dashboard

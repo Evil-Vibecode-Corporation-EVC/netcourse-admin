@@ -1,7 +1,7 @@
 import { AdminJSOptions } from 'adminjs';
 import bcrypt from 'bcryptjs';
 
-import componentLoader, { CourseQuickCreate, CourseDetailedEdit, QuizQuickCreate, UserQuickCreate } from './component-loader.js';
+import componentLoader, { CourseQuickCreate, CourseDetailedEdit, QuizQuickCreate, UserQuickCreate, ForumDetailedEdit } from './component-loader.js';
 
 /**
  * AdminJS options builder
@@ -454,10 +454,122 @@ if (db) {
     options: {
       id: 'forum_posts',
       navigation: { name: 'Форум', icon: 'Chat' },
-      listProperties: ['id', 'title', 'user_id', 'created_at'],
-      showProperties: ['id', 'title', 'body', 'user_id', 'created_at', 'updated_at'],
+      listProperties: ['id', 'title', 'user_id', 'likes_count', 'created_at'],
+      showProperties: ['id', 'title', 'body', 'user_id', 'likes_count', 'created_at', 'updated_at'],
       editProperties: ['title', 'body', 'user_id'],
       filterProperties: ['title', 'user_id', 'created_at'],
+      properties: {
+        likes_count: {
+          type: 'number',
+          isVisible: { list: true, show: true, edit: false, filter: false },
+          sortable: false,
+        },
+      },
+      actions: {
+        list: {
+          after: async (response: any) => {
+            const ids = response.records?.map((r: any) => r.params.id) || [];
+            if (ids.length === 0) return response;
+            const { Pool } = await import('pg');
+            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+            try {
+              const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
+              const { rows } = await pool.query(
+                `SELECT post_id, COUNT(*)::int AS count FROM forum_post_likes WHERE post_id IN (${placeholders}) GROUP BY post_id`,
+                ids
+              );
+              const countMap = Object.fromEntries(rows.map((r: any) => [r.post_id, r.count]));
+              for (const record of response.records) {
+                record.params.likes_count = String(countMap[record.params.id] || 0);
+              }
+            } finally {
+              await pool.end();
+            }
+            return response;
+          },
+        },
+        show: {
+          after: async (response: any) => {
+            if (!response?.record?.params?.id) return response;
+            const { Pool } = await import('pg');
+            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+            try {
+              const { rows } = await pool.query(
+                `SELECT COUNT(*)::int AS count FROM forum_post_likes WHERE post_id = $1`,
+                [response.record.params.id]
+              );
+              response.record.params.likes_count = String(rows[0].count);
+            } finally {
+              await pool.end();
+            }
+            return response;
+          },
+        },
+        detailedEdit: {
+          actionType: 'record',
+          component: ForumDetailedEdit,
+          icon: 'Edit',
+          label: 'Подробное редактирование',
+          handler: async (request: any, _response: any, context: any) => {
+            if (request.method !== 'get' && request.method !== 'post') return {};
+            const { Pool } = await import('pg');
+            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+            try {
+              const urlParts = request.url.split('/');
+              const recordIdx = urlParts.indexOf('records');
+              const recordId = recordIdx !== -1 ? parseInt(urlParts[recordIdx + 1], 10) : null;
+              if (!recordId) {
+                return { notice: { message: 'ID поста не найден', type: 'error' } };
+              }
+
+              if (request.method === 'get') {
+                const { rows: replies } = await pool.query(
+                  `SELECT fr.id, fr.body, fr.user_id, fr.created_at, u.email AS user_email
+                   FROM forum_replies fr LEFT JOIN users u ON u.id = fr.user_id
+                   WHERE fr.post_id = $1 ORDER BY fr.created_at ASC`,
+                  [recordId]
+                );
+
+                const { rows: [{ count: likes_count }] } = await pool.query(
+                  `SELECT COUNT(*)::int AS count FROM forum_post_likes WHERE post_id = $1`,
+                  [recordId]
+                );
+
+                return {
+                  record: {
+                    ...context.record.toJSON(context.currentAdmin),
+                    params: {
+                      ...context.record.toJSON(context.currentAdmin).params,
+                      replies_json: JSON.stringify(replies),
+                      likes_count: String(likes_count),
+                    },
+                  },
+                };
+              }
+
+              if (request.method === 'post') {
+                const { delete_reply_ids } = request.payload;
+                if (delete_reply_ids) {
+                  const ids = JSON.parse(delete_reply_ids) as number[];
+                  for (const id of ids) {
+                    await pool.query(`DELETE FROM forum_replies WHERE id = $1`, [id]);
+                  }
+                }
+
+                return {
+                  record: context.record.toJSON(context.currentAdmin),
+                  redirectUrl: '/resources/forum_posts',
+                  notice: { message: 'Пост обновлён', type: 'success' },
+                };
+              }
+            } catch (err: any) {
+              return { notice: { message: `Ошибка: ${err.message}`, type: 'error' } };
+            } finally {
+              await pool.end();
+            }
+          },
+        },
+      },
     },
   });
 

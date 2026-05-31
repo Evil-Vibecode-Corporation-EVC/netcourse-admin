@@ -11,5 +11,6 @@ export const CourseQuickCreate = componentLoader.add('CourseQuickCreate', './com
 export const CourseDetailedEdit = componentLoader.add('CourseDetailedEdit', './components/course-edit');
 export const QuizQuickCreate = componentLoader.add('QuizQuickCreate', './components/quiz-create');
 export const UserQuickCreate = componentLoader.add('UserQuickCreate', './components/user-create');
+export const ForumDetailedEdit = componentLoader.add('ForumDetailedEdit', './components/forum-edit');
 
 export default componentLoader;
