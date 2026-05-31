@@ -723,6 +723,11 @@ if (db) {
   configuredResources.push({ resource: db.table('user_badges'), options: { id: 'user_badges', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'badge_id', 'awarded_at'], showProperties: ['id', 'user_id', 'badge_id', 'awarded_at'] } });
   configuredResources.push({ resource: db.table('certifications'), options: { id: 'certifications', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'course_id', 'certificate_code', 'issued_at'], showProperties: ['id', 'user_id', 'course_id', 'certificate_code', 'issued_at'] } });
   configuredResources.push({ resource: db.table('course_ratings'), options: { id: 'course_ratings', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'course_id', 'rating', 'created_at'], showProperties: ['id', 'user_id', 'course_id', 'rating', 'created_at'] } });
+  try {
+    configuredResources.push({ resource: db.table('site_visits'), options: { id: 'site_visits', navigation: { name: 'Статистика', icon: 'Chart' }, listProperties: ['id', 'count', 'updated_at'], showProperties: ['id', 'count', 'updated_at'], editProperties: ['count'] } });
+  } catch (_e) {
+    // site_visits table not present — skip
+  }
 }
 
 // Options for AdminJS instance
@@ -774,7 +779,7 @@ const options: AdminJSOptions = {
               result.enrollments = safeCount(enrollRes);
 
               try {
-                const visitsRes = await pool.query('SELECT COUNT(*)::int AS count FROM site_visits');
+                const visitsRes = await pool.query("SELECT COALESCE(SUM(count), 0)::int AS count FROM site_visits");
                 result.visits = safeCount(visitsRes);
               } catch (e) {
                 // If there is no site_visits table, keep other counts and add note
@@ -801,7 +806,7 @@ const options: AdminJSOptions = {
               result.courses = safeCount(coursesRes);
               result.enrollments = safeCount(enrollRes);
               try {
-                const visitsRes = await q('SELECT COUNT(*)::int AS count FROM site_visits');
+                const visitsRes = await q("SELECT COALESCE(SUM(count), 0)::int AS count FROM site_visits");
                 result.visits = safeCount(visitsRes);
               } catch (e) {
                 result.note = 'site_visits table not found; showing users/courses/enrollments counts instead';
