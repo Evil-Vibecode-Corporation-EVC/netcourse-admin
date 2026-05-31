@@ -1,35 +1,25 @@
 name: Deploy Admin
 
 on:
-    push:
-        paths:
-            - '**'
-        branches:
-            - main
+  push:
+    branches:
+      - main
 
 jobs:
-    deploy:
-        runs-on:
-            - self-hosted
+  deploy:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Deploy admin to local host
-              run: |
-                  set -euo pipefail
-                  HOST_ROOT="/home/miha/srv"
-                  APP_DIR="$HOST_ROOT/netcourse-admin"
-
-                  echo "Syncing netcourse-admin to $APP_DIR"
-                  mkdir -p "$APP_DIR"
-
-                  rsync -az --delete --exclude='.git' --exclude='.github' ./ "$APP_DIR"/
-
-                  cd "$HOST_ROOT"
-
-                  echo "Building and restarting netcourse-admin service via docker compose"
-                  docker compose -f docker-compose.yml -p srv up -d --build netcourse-admin
-
-                  docker system prune -f || true
+    steps:
+      - name: Deploy via SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -p 2232 \
+              miha@172.17.0.1 \
+              "cd /home/miha/srv && \
+               git -C /home/miha/srv/netcourse-admin pull && \
+               docker compose -f /home/miha/srv/docker-compose.yml -p srv up -d --build netcourse-admin && \
+               docker system prune -f"
