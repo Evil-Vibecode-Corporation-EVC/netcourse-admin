@@ -1,7 +1,7 @@
 import { AdminJSOptions } from 'adminjs';
 import bcrypt from 'bcryptjs';
 
-import componentLoader, { CourseQuickCreate, CourseDetailedEdit, QuizQuickCreate, UserQuickCreate, ForumDetailedEdit } from './component-loader.js';
+import componentLoader, { CourseQuickCreate, CourseDetailedEdit, QuizQuickCreate, UserQuickCreate, UserDetailedEdit, ForumDetailedEdit } from './component-loader.js';
 
 /**
  * AdminJS options builder
@@ -82,6 +82,7 @@ if (db) {
         edit: { before: [hashPasswordHook] },
         quickCreate: {
           actionType: 'resource',
+          isDefault: true,
           component: UserQuickCreate,
           icon: 'Add',
           label: 'Создать пользователя',
@@ -112,6 +113,137 @@ if (db) {
             }
           },
         },
+        detailedEdit: {
+          actionType: 'record',
+          isDefault: true,
+          component: UserDetailedEdit,
+          icon: 'Edit',
+          label: 'Подробное редактирование',
+          handler: async (request: any, _response: any, context: any) => {
+            if (request.method !== 'get' && request.method !== 'post') return {};
+            const { Pool } = await import('pg');
+            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+            try {
+              const urlParts = request.url.split('/');
+              const recordIdx = urlParts.indexOf('records');
+              const recordId = recordIdx !== -1 ? parseInt(urlParts[recordIdx + 1], 10) : null;
+              if (!recordId) {
+                return { notice: { message: 'ID пользователя не найден', type: 'error' } };
+              }
+
+              if (request.method === 'get') {
+                const [enrollments, progress, quizAttempts, badgesData, certifications, socialLinks, ratings, allCourses, allBadges] = await Promise.all([
+                  pool.query(`SELECT e.*, c.title AS course_title FROM enrollments e LEFT JOIN courses c ON c.id = e.course_id WHERE e.user_id = $1 ORDER BY e.enrolled_at DESC`, [recordId]),
+                  pool.query(`SELECT * FROM progress WHERE user_id = $1 ORDER BY updated_at DESC`, [recordId]),
+                  pool.query(`SELECT qa.*, q.title AS quiz_title FROM quiz_attempts qa LEFT JOIN quizzes q ON q.id = qa.quiz_id WHERE qa.user_id = $1 ORDER BY qa.completed_at DESC`, [recordId]),
+                  pool.query(`SELECT ub.*, b.name AS badge_name, b.description AS badge_desc FROM user_badges ub LEFT JOIN badges b ON b.id = ub.badge_id WHERE ub.user_id = $1 ORDER BY ub.awarded_at DESC`, [recordId]),
+                  pool.query(`SELECT * FROM certifications WHERE user_id = $1 ORDER BY issued_at DESC`, [recordId]),
+                  pool.query(`SELECT * FROM user_social_links WHERE user_id = $1`, [recordId]),
+                  pool.query(`SELECT cr.*, c.title AS course_title FROM course_ratings cr LEFT JOIN courses c ON c.id = cr.course_id WHERE cr.user_id = $1 ORDER BY cr.created_at DESC`, [recordId]),
+                  pool.query(`SELECT id, title FROM courses ORDER BY title`),
+                  pool.query(`SELECT id, name FROM badges ORDER BY name`),
+                ]);
+
+                return {
+                  record: {
+                    ...context.record.toJSON(context.currentAdmin),
+                    params: {
+                      ...context.record.toJSON(context.currentAdmin).params,
+                      _enrollments_json: JSON.stringify(enrollments.rows),
+                      _progress_json: JSON.stringify(progress.rows),
+                      _quiz_attempts_json: JSON.stringify(quizAttempts.rows),
+                      _badges_json: JSON.stringify(badgesData.rows),
+                      _certifications_json: JSON.stringify(certifications.rows),
+                      _social_links_json: JSON.stringify(socialLinks.rows),
+                      _ratings_json: JSON.stringify(ratings.rows),
+                      _all_courses_json: JSON.stringify(allCourses.rows),
+                      _all_badges_json: JSON.stringify(allBadges.rows),
+                    },
+                  },
+                };
+              }
+
+              if (request.method === 'post') {
+                const { email, username, bio, role, avatar_url, password, delete_enrollment_ids, delete_social_ids, delete_badge_ids, delete_cert_ids, add_enrollment_course_id, add_badge_id, _quick_delete_table, _quick_delete_id } = request.payload;
+
+                if (_quick_delete_table && _quick_delete_id) {
+                  const allowedTables: Record<string, string> = {
+                    enrollments: 'enrollments',
+                    user_badges: 'user_badges',
+                    certifications: 'certifications',
+                    user_social_links: 'user_social_links',
+                  };
+                  const tbl = allowedTables[_quick_delete_table as string];
+                  if (tbl) {
+                    await pool.query(`DELETE FROM ${tbl} WHERE id = $1`, [parseInt(_quick_delete_id as string, 10)]);
+                  }
+                  return { record: context.record.toJSON(context.currentAdmin), notice: { message: 'Запись удалена', type: 'success' } };
+                }
+
+                const updates: string[] = [];
+                const vals: any[] = [];
+                let idx = 1;
+
+                if (email !== undefined) { updates.push(`email = $${idx++}`); vals.push(email); }
+                if (username !== undefined) { updates.push(`username = $${idx++}`); vals.push(username); }
+                if (bio !== undefined) { updates.push(`bio = $${idx++}`); vals.push(bio); }
+                if (role !== undefined) { updates.push(`role = $${idx++}`); vals.push(role); }
+                if (avatar_url !== undefined) { updates.push(`avatar_url = $${idx++}`); vals.push(avatar_url); }
+                if (password && password.trim() !== '') {
+                  const hashed = await bcrypt.hash(password, 10);
+                  updates.push(`password = $${idx++}`);
+                  vals.push(hashed);
+                }
+
+                if (updates.length > 0) {
+                  vals.push(recordId);
+                  await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE id = $${idx}`, vals);
+                }
+
+                const del = (table: string, idField: string, ids: number[]) => {
+                  if (ids.length === 0) return;
+                  const ph = ids.map((_, i) => `$${i + 1}`).join(',');
+                  return pool.query(`DELETE FROM ${table} WHERE ${idField} IN (${ph})`, ids);
+                };
+
+                if (delete_enrollment_ids) await del('enrollments', 'id', JSON.parse(delete_enrollment_ids));
+                if (delete_social_ids) await del('user_social_links', 'id', JSON.parse(delete_social_ids));
+                if (delete_badge_ids) await del('user_badges', 'id', JSON.parse(delete_badge_ids));
+                if (delete_cert_ids) await del('certifications', 'id', JSON.parse(delete_cert_ids));
+
+                if (add_enrollment_course_id) {
+                  const courseIdNum = parseInt(add_enrollment_course_id, 10);
+                  if (!isNaN(courseIdNum)) {
+                    await pool.query(
+                      `INSERT INTO enrollments (user_id, course_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+                      [recordId, courseIdNum]
+                    );
+                  }
+                }
+
+                if (add_badge_id) {
+                  const badgeIdNum = parseInt(add_badge_id, 10);
+                  if (!isNaN(badgeIdNum)) {
+                    await pool.query(
+                      `INSERT INTO user_badges (user_id, badge_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+                      [recordId, badgeIdNum]
+                    );
+                  }
+                }
+
+                return {
+                  record: context.record.toJSON(context.currentAdmin),
+                  redirectUrl: '/resources/users',
+                  notice: { message: 'Пользователь обновлён', type: 'success' },
+                };
+              }
+            } catch (err: any) {
+              return { notice: { message: `Ошибка: ${err.message}`, type: 'error' } };
+            } finally {
+              await pool.end();
+            }
+          },
+        },
       },
     },
   });
@@ -133,6 +265,7 @@ if (db) {
       actions: {
         quickCreate: {
           actionType: 'resource',
+          isDefault: true,
           component: CourseQuickCreate,
           icon: 'Add',
           label: 'Создать курс целиком',
@@ -213,6 +346,7 @@ if (db) {
         },
         detailedEdit: {
           actionType: 'record',
+          isDefault: true,
           component: CourseDetailedEdit,
           icon: 'Edit',
           label: 'Подробное редактирование',
@@ -507,6 +641,7 @@ if (db) {
         },
         detailedEdit: {
           actionType: 'record',
+          isDefault: true,
           component: ForumDetailedEdit,
           icon: 'Edit',
           label: 'Подробное редактирование',
@@ -573,21 +708,21 @@ if (db) {
     },
   });
 
-  // Hidden child tables (доступны через родительские записи)
-  configuredResources.push({ resource: db.table('forum_replies'), options: { id: 'forum_replies', navigation: false, listProperties: ['id', 'post_id', 'user_id', 'created_at'], showProperties: ['id', 'post_id', 'body', 'user_id', 'created_at', 'updated_at'], editProperties: ['body'] } });
-  configuredResources.push({ resource: db.table('forum_tags'), options: { id: 'forum_tags', navigation: false, listProperties: ['id', 'name'], showProperties: ['id', 'name'], editProperties: ['name'], newProperties: ['name'] } });
-  configuredResources.push({ resource: db.table('forum_post_tags'), options: { id: 'forum_post_tags', navigation: false, listProperties: ['id', 'post_id', 'tag_id'], showProperties: ['id', 'post_id', 'tag_id'] } });
-  configuredResources.push({ resource: db.table('forum_reply_tags'), options: { id: 'forum_reply_tags', navigation: false, listProperties: ['id', 'reply_id', 'tag_id'], showProperties: ['id', 'reply_id', 'tag_id'] } });
-  configuredResources.push({ resource: db.table('forum_post_likes'), options: { id: 'forum_post_likes', navigation: false, listProperties: ['id', 'post_id', 'user_id', 'created_at'], showProperties: ['id', 'post_id', 'user_id', 'created_at'] } });
-  configuredResources.push({ resource: db.table('forum_reply_likes'), options: { id: 'forum_reply_likes', navigation: false, listProperties: ['id', 'reply_id', 'user_id', 'created_at'], showProperties: ['id', 'reply_id', 'user_id', 'created_at'] } });
-  // ── user-related tables (скрыты, отображаются как связанные записи на странице пользователя) ──
-  configuredResources.push({ resource: db.table('quiz_attempts'), options: { id: 'quiz_attempts', navigation: false, listProperties: ['id', 'user_id', 'quiz_id', 'score', 'passed', 'completed_at'], showProperties: ['id', 'user_id', 'quiz_id', 'score', 'passed', 'completed_at'] } });
-  configuredResources.push({ resource: db.table('progress'), options: { id: 'progress', navigation: false, listProperties: ['id', 'user_id', 'course_id', 'status', 'updated_at'], showProperties: ['id', 'user_id', 'course_id', 'status', 'updated_at'] } });
-  configuredResources.push({ resource: db.table('user_social_links'), options: { id: 'user_social_links', navigation: false, listProperties: ['id', 'user_id', 'platform', 'url'], showProperties: ['id', 'user_id', 'platform', 'url'] } });
-  configuredResources.push({ resource: db.table('badges'), options: { id: 'badges', navigation: false, listProperties: ['id', 'name', 'description', 'course_id'], showProperties: ['id', 'name', 'description', 'image_url', 'course_id'], editProperties: ['name', 'description', 'image_url', 'course_id'], newProperties: ['name', 'description', 'image_url', 'course_id'] } });
-  configuredResources.push({ resource: db.table('user_badges'), options: { id: 'user_badges', navigation: false, listProperties: ['id', 'user_id', 'badge_id', 'awarded_at'], showProperties: ['id', 'user_id', 'badge_id', 'awarded_at'] } });
-  configuredResources.push({ resource: db.table('certifications'), options: { id: 'certifications', navigation: false, listProperties: ['id', 'user_id', 'course_id', 'certificate_code', 'issued_at'], showProperties: ['id', 'user_id', 'course_id', 'certificate_code', 'issued_at'] } });
-  configuredResources.push({ resource: db.table('course_ratings'), options: { id: 'course_ratings', navigation: false, listProperties: ['id', 'user_id', 'course_id', 'rating', 'created_at'], showProperties: ['id', 'user_id', 'course_id', 'rating', 'created_at'] } });
+  // ── forum child tables ──────────────────────────────────────────────────
+  configuredResources.push({ resource: db.table('forum_replies'), options: { id: 'forum_replies', navigation: { name: 'Форум', icon: 'Chat' }, listProperties: ['id', 'post_id', 'user_id', 'created_at'], showProperties: ['id', 'post_id', 'body', 'user_id', 'created_at', 'updated_at'], editProperties: ['body'] } });
+  configuredResources.push({ resource: db.table('forum_tags'), options: { id: 'forum_tags', navigation: { name: 'Форум', icon: 'Chat' }, listProperties: ['id', 'name'], showProperties: ['id', 'name'], editProperties: ['name'], newProperties: ['name'] } });
+  configuredResources.push({ resource: db.table('forum_post_tags'), options: { id: 'forum_post_tags', navigation: { name: 'Форум', icon: 'Chat' }, listProperties: ['id', 'post_id', 'tag_id'], showProperties: ['id', 'post_id', 'tag_id'] } });
+  configuredResources.push({ resource: db.table('forum_reply_tags'), options: { id: 'forum_reply_tags', navigation: { name: 'Форум', icon: 'Chat' }, listProperties: ['id', 'reply_id', 'tag_id'], showProperties: ['id', 'reply_id', 'tag_id'] } });
+  configuredResources.push({ resource: db.table('forum_post_likes'), options: { id: 'forum_post_likes', navigation: { name: 'Форум', icon: 'Chat' }, listProperties: ['id', 'post_id', 'user_id', 'created_at'], showProperties: ['id', 'post_id', 'user_id', 'created_at'] } });
+  configuredResources.push({ resource: db.table('forum_reply_likes'), options: { id: 'forum_reply_likes', navigation: { name: 'Форум', icon: 'Chat' }, listProperties: ['id', 'reply_id', 'user_id', 'created_at'], showProperties: ['id', 'reply_id', 'user_id', 'created_at'] } });
+  // ── user-related tables ─────────────────────────────────────────────────
+  configuredResources.push({ resource: db.table('quiz_attempts'), options: { id: 'quiz_attempts', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'quiz_id', 'score', 'passed', 'completed_at'], showProperties: ['id', 'user_id', 'quiz_id', 'score', 'passed', 'completed_at'] } });
+  configuredResources.push({ resource: db.table('progress'), options: { id: 'progress', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'course_id', 'status', 'updated_at'], showProperties: ['id', 'user_id', 'course_id', 'status', 'updated_at'] } });
+  configuredResources.push({ resource: db.table('user_social_links'), options: { id: 'user_social_links', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'platform', 'url'], showProperties: ['id', 'user_id', 'platform', 'url'] } });
+  configuredResources.push({ resource: db.table('badges'), options: { id: 'badges', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'name', 'description', 'course_id'], showProperties: ['id', 'name', 'description', 'image_url', 'course_id'], editProperties: ['name', 'description', 'image_url', 'course_id'], newProperties: ['name', 'description', 'image_url', 'course_id'] } });
+  configuredResources.push({ resource: db.table('user_badges'), options: { id: 'user_badges', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'badge_id', 'awarded_at'], showProperties: ['id', 'user_id', 'badge_id', 'awarded_at'] } });
+  configuredResources.push({ resource: db.table('certifications'), options: { id: 'certifications', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'course_id', 'certificate_code', 'issued_at'], showProperties: ['id', 'user_id', 'course_id', 'certificate_code', 'issued_at'] } });
+  configuredResources.push({ resource: db.table('course_ratings'), options: { id: 'course_ratings', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'course_id', 'rating', 'created_at'], showProperties: ['id', 'user_id', 'course_id', 'rating', 'created_at'] } });
 }
 
 // Options for AdminJS instance
