@@ -3,7 +3,7 @@ name: Deploy Admin
 on:
     push:
         paths:
-            - 'netcourse-admin/**'
+            - '**'
         branches:
             - main
 
@@ -25,7 +25,7 @@ jobs:
                   echo "Syncing netcourse-admin to $APP_DIR"
                   mkdir -p "$APP_DIR"
 
-                  rsync -az --delete --exclude='.git' --exclude='.github' netcourse-admin/ "$APP_DIR"/
+                  rsync -az --delete --exclude='.git' --exclude='.github' ./ "$APP_DIR"/
 
                   cd "$HOST_ROOT"
 
