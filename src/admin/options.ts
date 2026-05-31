@@ -1,7 +1,7 @@
 import { AdminJSOptions } from 'adminjs';
 import bcrypt from 'bcryptjs';
 
-import componentLoader from './component-loader.js';
+import componentLoader, { CourseQuickCreate } from './component-loader.js';
 
 /**
  * AdminJS options builder
@@ -98,6 +98,89 @@ if (db) {
       properties: {
         description: { type: 'textarea' },
       },
+      actions: {
+        quickCreate: {
+          actionType: 'resource',
+          component: CourseQuickCreate,
+          icon: 'Add',
+          label: 'Создать курс целиком',
+          handler: async (request: any, _response: any, context: any) => {
+            if (request.method !== 'post') return {};
+            try {
+              const { Pool } = await import('pg');
+              const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+              try {
+                const { title, description, category, require_quiz_completion, min_quiz_score, sections_json } = request.payload;
+                if (!title) {
+                  return { notice: { message: 'Название курса обязательно', type: 'error' } };
+                }
+                const sections = sections_json ? JSON.parse(sections_json) : [];
+                const { rows: [course] } = await pool.query(
+                  `INSERT INTO courses (title, description, category, require_quiz_completion, min_quiz_score)
+                   VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+                  [title, description || null, category || null, require_quiz_completion === 'true' || require_quiz_completion === true, parseInt(min_quiz_score || '65', 10)]
+                );
+                const courseId = course.id;
+
+                for (let i = 0; i < sections.length; i++) {
+                  const sec = sections[i];
+                  if (!sec.title) continue;
+                  const { rows: [sectionRes] } = await pool.query(
+                    `INSERT INTO sections (course_id, title, order_index) VALUES ($1, $2, $3) RETURNING id`,
+                    [courseId, sec.title, i]
+                  );
+                  const lessons = sec.lessons || [];
+                  for (let j = 0; j < lessons.length; j++) {
+                    const lesson = lessons[j];
+                    if (!lesson.title) continue;
+                    await pool.query(
+                      `INSERT INTO lessons (section_id, title, content_type, order_index) VALUES ($1, $2, $3, $4)`,
+                      [sectionRes.id, lesson.title, lesson.content_type || 'text', j]
+                    );
+                  }
+                }
+
+                return {
+                  redirectUrl: '/resources/courses',
+                  notice: { message: `Курс «${title}» создан с ${sections.length} разделами`, type: 'success' },
+                };
+              } finally {
+                await pool.end();
+              }
+            } catch (err: any) {
+              return { notice: { message: `Ошибка: ${err.message}`, type: 'error' } };
+            }
+          },
+        },
+      },
+    },
+  });
+
+  // ── sections ───────────────────────────────────────────────────────────────
+  configuredResources.push({
+    resource: db.table('sections'),
+    options: {
+      id: 'sections',
+      navigation: { name: 'Курсы', icon: 'Video' },
+      listProperties: ['id', 'course_id', 'title', 'order_index'],
+      showProperties: ['id', 'course_id', 'title', 'order_index'],
+      editProperties: ['course_id', 'title', 'order_index'],
+      newProperties: ['course_id', 'title', 'order_index'],
+      filterProperties: ['course_id', 'title'],
+    },
+  });
+
+  // ── lessons ────────────────────────────────────────────────────────────────
+  configuredResources.push({
+    resource: db.table('lessons'),
+    options: {
+      id: 'lessons',
+      navigation: { name: 'Курсы', icon: 'Video' },
+      listProperties: ['id', 'section_id', 'title', 'content_type', 'order_index'],
+      showProperties: ['id', 'section_id', 'title', 'content_type', 'video_url', 'text_content', 'order_index'],
+      editProperties: ['section_id', 'title', 'content_type', 'video_url', 'text_content', 'order_index'],
+      newProperties: ['section_id', 'title', 'content_type', 'video_url', 'text_content', 'order_index'],
+      filterProperties: ['section_id', 'title', 'content_type'],
     },
   });
 

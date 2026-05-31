@@ -7,4 +7,6 @@ componentLoader.override('Login', './components/login');
 
 // Additional custom pages/components can be registered from options.ts
 
+export const CourseQuickCreate = componentLoader.add('CourseQuickCreate', './components/course-create');
+
 export default componentLoader;

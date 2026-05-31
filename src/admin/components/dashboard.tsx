@@ -190,16 +190,6 @@ const styles = {
     color: C.textFaint,
   } as React.CSSProperties,
 
-  tipBox: {
-    padding: '12px 14px',
-    backgroundColor: 'rgba(6,182,212,0.08)',
-    border: `1px solid rgba(6,182,212,0.2)`,
-    borderRadius: 7,
-    fontSize: 13,
-    color: C.textFaint,
-    lineHeight: 1.55,
-  } as React.CSSProperties,
-
   // ── Декоративная полоса на карточке метрики ──────────────────────────────────
   metricGlow: (accentColor: string): React.CSSProperties => ({
     position: 'absolute',
@@ -231,14 +221,6 @@ function buildDashboardUrl() {
   return `${base}/api/dashboard`;
 }
 
-const TIPS = [
-  'Используйте фильтры, чтобы быстро найти пользователей по роли.',
-  'Данные из таблиц можно экспортировать через встроенную кнопку CSV.',
-  'Скройте чувствительные поля (например, password) в представлении списка.',
-  'Включите AUTOLOAD_DB=true, чтобы AdminJS обнаруживал таблицы БД автоматически.',
-  'Обязательно задайте надёжный COOKIE_SECRET перед открытием панели в продакшене.',
-];
-
 // ─── Компонент карточки метрики ────────────────────────────────────────────────
 function MetricCard({
   label,
@@ -267,7 +249,6 @@ export default function Dashboard(): JSX.Element {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [tip, setTip] = useState<string>(TIPS[0]);
 
   // Загрузка данных дашборда
   useEffect(() => {
@@ -297,16 +278,6 @@ export default function Dashboard(): JSX.Element {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
-
-  // Ротация подсказок
-  useEffect(() => {
-    let idx = 1;
-    const id = setInterval(() => {
-      setTip(TIPS[idx % TIPS.length]);
-      idx++;
-    }, 10_000);
-    return () => clearInterval(id);
   }, []);
 
   const adminBase = window.location.pathname.replace(/\/$/, '');
@@ -381,7 +352,7 @@ export default function Dashboard(): JSX.Element {
             {/* Быстрые действия */}
             <div style={styles.widget}>
               <h3 style={styles.widgetTitle}>Быстрые действия</h3>
-              <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap' as const }}>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
                 <a href={linkTo('users')} style={styles.btnBlue}>
                   Пользователи
                 </a>
@@ -389,19 +360,6 @@ export default function Dashboard(): JSX.Element {
                   Курсы
                 </a>
               </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: C.textGhost,
-                  marginBottom: 8,
-                  textTransform: 'uppercase' as const,
-                  letterSpacing: '0.07em',
-                }}
-              >
-                Совет
-              </div>
-              <div style={styles.tipBox}>{tip}</div>
             </div>
           </div>
         </>

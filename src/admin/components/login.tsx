@@ -31,7 +31,7 @@ type Branding = {
 
 // ─── Компонент ────────────────────────────────────────────────────────────────
 export default function Login(): JSX.Element {
-  const { action = '/admin/login', errorMessage } =
+  const { action = '/login', errorMessage } =
     ((window as any).__APP_STATE__ ?? {}) as AppState;
   const branding: Branding =
     (window as any).REDUX_STATE?.branding ?? {};
