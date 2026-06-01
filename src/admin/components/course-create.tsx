@@ -166,7 +166,7 @@ function QuestionBlock({
           {question.answers.map((ans, ai) => (
             <AnswerRow key={ai} answer={ans} onChange={a => updateAnswer(ai, a)} onRemove={() => removeAnswer(ai)} />
           ))}
-          <button onClick={addAnswer} style={btnAdd}>+ Вариант ответа</button>
+          <button type="button" onClick={addAnswer} style={btnAdd}>+ Вариант ответа</button>
         </>
       )}
     </div>
@@ -253,7 +253,7 @@ function LessonRow({
           {(lesson.questions || []).map((q, qi) => (
             <QuestionBlock key={qi} question={q} onChange={a => updateQuestion(qi, a)} onRemove={() => removeQuestion(qi)} />
           ))}
-          <button onClick={addQuestion} style={btnAdd}>+ Вопрос</button>
+          <button type="button" onClick={addQuestion} style={btnAdd}>+ Вопрос</button>
         </div>
       )}
     </div>
@@ -300,7 +300,7 @@ function SectionBlock({
       {section.lessons.map((lesson, li) => (
         <LessonRow key={li} lesson={lesson} onChange={l => updateLesson(li, l)} onRemove={() => removeLesson(li)} />
       ))}
-      <button onClick={addLesson} style={btnAdd}>+ Урок</button>
+      <button type="button" onClick={addLesson} style={btnAdd}>+ Урок</button>
     </div>
   );
 }
