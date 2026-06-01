@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // ─── Цветовая карта (единый источник истины) ───────────────────────────────────
 const C = {
@@ -37,6 +37,21 @@ export default function Login(): JSX.Element {
     (window as any).REDUX_STATE?.branding ?? {};
 
   const [hover, setHover] = useState<string | null>(null);
+
+  useEffect(() => {
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]'
+    );
+    if (existingScript) {
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+  }, []);
 
   return (
     <div style={s.page}>
@@ -157,6 +172,13 @@ export default function Login(): JSX.Element {
           </div>
 
           {/* Кнопка */}
+          <div style={s.turnstile}>
+            <div
+              className="cf-turnstile"
+              data-sitekey="0x4AAAAAADc0xYww_LmgQeEr"
+              data-theme="dark"
+            />
+          </div>
           <button
             type="submit"
             style={s.btn}
@@ -376,5 +398,10 @@ const s: Record<string, React.CSSProperties> = {
     color: C.ghost,
     textAlign: 'center',
     lineHeight: 1.5,
+  },
+
+  turnstile: {
+    marginTop: 6,
+    marginBottom: 14,
   },
 };
