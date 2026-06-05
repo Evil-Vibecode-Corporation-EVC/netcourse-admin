@@ -2,20 +2,20 @@ import React, { useEffect, useState } from 'react';
 
 // ─── Цветовая карта (единый источник истины) ───────────────────────────────────
 const C = {
-  bgPage:    '#020617',
-  bgDark:    '#0f172a',
-  bgCard:    '#1e293b',
-  bgInput:   '#0f172a',
-  border:    '#334155',
-  green:     '#10b981',
+  bgPage: '#020617',
+  bgDark: '#0f172a',
+  bgCard: '#1e293b',
+  bgInput: '#0f172a',
+  border: '#334155',
+  green: '#10b981',
   greenDark: '#059669',
-  cyan:      '#06b6d4',
-  blue:      '#3b82f6',
-  error:     '#ef4444',
-  white:     '#ffffff',
-  muted:     '#cbd5e1',
-  faint:     '#94a3b8',
-  ghost:     '#64748b',
+  cyan: '#06b6d4',
+  blue: '#3b82f6',
+  error: '#ef4444',
+  white: '#ffffff',
+  muted: '#cbd5e1',
+  faint: '#94a3b8',
+  ghost: '#64748b',
 } as const;
 
 // ─── Типы ──────────────────────────────────────────────────────────────────────
@@ -31,10 +31,8 @@ type Branding = {
 
 // ─── Компонент ────────────────────────────────────────────────────────────────
 export default function Login(): JSX.Element {
-  const { action = '/login', errorMessage } =
-    ((window as any).__APP_STATE__ ?? {}) as AppState;
-  const branding: Branding =
-    (window as any).REDUX_STATE?.branding ?? {};
+  const { action = '/login', errorMessage } = ((window as any).__APP_STATE__ ?? {}) as AppState;
+  const branding: Branding = (window as any).REDUX_STATE?.branding ?? {};
 
   const [hover, setHover] = useState<string | null>(null);
 
@@ -57,37 +55,31 @@ export default function Login(): JSX.Element {
     <div style={s.page}>
       {/* ── Центрированная карточка ───────────────────────────────────────── */}
       <div style={s.card}>
-
         {/* ── Левая панель — брендинг ───────────────────────────────────── */}
         <div style={s.left}>
           {/* Логотип / название */}
           <div style={s.brand}>
             <div style={s.brandDot} />
-            <span style={s.brandName}>
-              {branding.companyName ?? 'Netcourse Admin'}
-            </span>
+            <span style={s.brandName}>{branding.companyName ?? 'Netcourse Admin'}</span>
           </div>
 
           {/* Большой заголовок */}
-          <h1 style={s.welcome}>Добро<br />пожаловать</h1>
+          <h1 style={s.welcome}>
+            Добро
+            <br />
+            пожаловать
+          </h1>
 
           {/* Подзаголовок */}
           <p style={s.welcomeSub}>
-            Панель управления платформой Netcourse.
-            Доступ только для авторизованных администраторов.
+            Панель управления платформой Netcourse. Доступ только для авторизованных администраторов.
           </p>
 
           {/* Декоративные плашки */}
           <div style={s.decorRow}>
-            <div style={{ ...s.decorChip, borderColor: C.green, color: C.green }}>
-              Пользователи
-            </div>
-            <div style={{ ...s.decorChip, borderColor: C.cyan, color: C.cyan }}>
-              Курсы
-            </div>
-            <div style={{ ...s.decorChip, borderColor: C.blue, color: C.blue }}>
-              Аналитика
-            </div>
+            <div style={{ ...s.decorChip, borderColor: C.green, color: C.green }}>Пользователи</div>
+            <div style={{ ...s.decorChip, borderColor: C.cyan, color: C.cyan }}>Курсы</div>
+            <div style={{ ...s.decorChip, borderColor: C.blue, color: C.blue }}>Аналитика</div>
           </div>
 
           {/* Декоративная сетка точек */}
@@ -128,16 +120,16 @@ export default function Login(): JSX.Element {
               id="login-email"
               name="email"
               type="email"
-              placeholder="admin@example.com"
+              placeholder=""
               autoComplete="email"
               required
               style={s.input}
-              onFocus={e => {
+              onFocus={(e) => {
                 setHover('email');
                 (e.target as HTMLInputElement).style.borderColor = C.green;
                 (e.target as HTMLInputElement).style.boxShadow = `0 0 0 3px rgba(16,185,129,0.15)`;
               }}
-              onBlur={e => {
+              onBlur={(e) => {
                 setHover(null);
                 (e.target as HTMLInputElement).style.borderColor = C.border;
                 (e.target as HTMLInputElement).style.boxShadow = 'none';
@@ -154,16 +146,16 @@ export default function Login(): JSX.Element {
               id="login-password"
               name="password"
               type="password"
-              placeholder="••••••••"
+              placeholder=""
               autoComplete="current-password"
               required
               style={s.input}
-              onFocus={e => {
+              onFocus={(e) => {
                 setHover('password');
                 (e.target as HTMLInputElement).style.borderColor = C.green;
                 (e.target as HTMLInputElement).style.boxShadow = `0 0 0 3px rgba(16,185,129,0.15)`;
               }}
-              onBlur={e => {
+              onBlur={(e) => {
                 setHover(null);
                 (e.target as HTMLInputElement).style.borderColor = C.border;
                 (e.target as HTMLInputElement).style.boxShadow = 'none';
@@ -182,21 +174,17 @@ export default function Login(): JSX.Element {
           <button
             type="submit"
             style={s.btn}
-            onMouseEnter={e =>
-              ((e.target as HTMLButtonElement).style.background =
-                `linear-gradient(135deg, ${C.greenDark}, #047857)`)
+            onMouseEnter={(e) =>
+              ((e.target as HTMLButtonElement).style.background = `linear-gradient(135deg, ${C.greenDark}, #047857)`)
             }
-            onMouseLeave={e =>
-              ((e.target as HTMLButtonElement).style.background =
-                `linear-gradient(135deg, ${C.green}, ${C.greenDark})`)
+            onMouseLeave={(e) =>
+              ((e.target as HTMLButtonElement).style.background = `linear-gradient(135deg, ${C.green}, ${C.greenDark})`)
             }
           >
             Войти
           </button>
 
-          <p style={s.hint}>
-            Проблемы со входом? Обратитесь к системному администратору.
-          </p>
+          <p style={s.hint}>Проблемы со входом? Обратитесь к системному администратору.</p>
         </form>
       </div>
     </div>
