@@ -13,5 +13,6 @@ export const QuizQuickCreate = componentLoader.add('QuizQuickCreate', './compone
 export const UserQuickCreate = componentLoader.add('UserQuickCreate', './components/user-create');
 export const UserDetailedEdit = componentLoader.add('UserDetailedEdit', './components/user-edit');
 export const ForumDetailedEdit = componentLoader.add('ForumDetailedEdit', './components/forum-edit');
+export const BadgeImageUpload = componentLoader.add('BadgeImageUpload', './components/badge-image-upload');
 
 export default componentLoader;
