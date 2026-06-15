@@ -1,7 +1,7 @@
 import { AdminJSOptions } from 'adminjs';
 import bcrypt from 'bcryptjs';
 
-import componentLoader, { CourseQuickCreate, CourseDetailedEdit, QuizQuickCreate, UserQuickCreate, UserDetailedEdit, ForumDetailedEdit, BadgeImageUpload } from './component-loader.js';
+import componentLoader, { CourseQuickCreate, CourseDetailedEdit, QuizQuickCreate, UserQuickCreate, UserDetailedEdit, ForumDetailedEdit } from './component-loader.js';
 
 /**
  * AdminJS options builder
@@ -719,28 +719,7 @@ if (db) {
   configuredResources.push({ resource: db.table('quiz_attempts'), options: { id: 'quiz_attempts', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'quiz_id', 'score', 'passed', 'completed_at'], showProperties: ['id', 'user_id', 'quiz_id', 'score', 'passed', 'completed_at'] } });
   configuredResources.push({ resource: db.table('progress'), options: { id: 'progress', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'course_id', 'status', 'updated_at'], showProperties: ['id', 'user_id', 'course_id', 'status', 'updated_at'] } });
   configuredResources.push({ resource: db.table('user_social_links'), options: { id: 'user_social_links', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'platform', 'url'], showProperties: ['id', 'user_id', 'platform', 'url'] } });
-  configuredResources.push({
-    resource: db.table('badges'),
-    options: {
-      id: 'badges',
-      navigation: { name: 'Пользователи', icon: 'User' },
-      listProperties: ['id', 'name', 'description', 'course_id'],
-      showProperties: ['id', 'name', 'description', 'image_url', 'course_id'],
-      editProperties: ['name', 'description', 'image_url', 'course_id'],
-      newProperties: ['name', 'description', 'image_url', 'course_id'],
-      actions: {
-        uploadImage: {
-          actionType: 'record',
-          icon: 'Image',
-          label: 'Upload Image',
-          component: BadgeImageUpload,
-          handler: async (request, response, context) => {
-            return { record: context.record };
-          },
-        },
-      },
-    },
-  });
+  configuredResources.push({ resource: db.table('badges'), options: { id: 'badges', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'name', 'description', 'course_id'], showProperties: ['id', 'name', 'description', 'image_url', 'course_id'], editProperties: ['name', 'description', 'image_url', 'course_id'], newProperties: ['name', 'description', 'image_url', 'course_id'] } });
   configuredResources.push({ resource: db.table('user_badges'), options: { id: 'user_badges', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'badge_id', 'awarded_at'], showProperties: ['id', 'user_id', 'badge_id', 'awarded_at'] } });
   configuredResources.push({ resource: db.table('certifications'), options: { id: 'certifications', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'course_id', 'certificate_code', 'issued_at'], showProperties: ['id', 'user_id', 'course_id', 'certificate_code', 'issued_at'] } });
   configuredResources.push({ resource: db.table('course_ratings'), options: { id: 'course_ratings', navigation: { name: 'Пользователи', icon: 'User' }, listProperties: ['id', 'user_id', 'course_id', 'rating', 'created_at'], showProperties: ['id', 'user_id', 'course_id', 'rating', 'created_at'] } });
